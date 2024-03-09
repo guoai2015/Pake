@@ -1,6 +1,6 @@
 use crate::app::config::PakeConfig;
 use std::path::PathBuf;
-use tauri::{App, Event, Manager, Window, WindowBuilder, WindowUrl};
+use tauri::{App, Window, WindowBuilder, WindowUrl};
 
 #[cfg(target_os = "macos")]
 use tauri::TitleBarStyle;
@@ -53,12 +53,6 @@ pub fn get_window(app: &mut App, config: PakeConfig, _data_dir: PathBuf) -> Wind
     {
         window_builder = window_builder.data_directory(_data_dir);
     }
-
-    // 监听窗口关闭事件，将窗口最小化到系统托盘区
-    app.listen_global(Event::WindowCloseRequested, move |event| {
-        let window = event.window();
-        window.minimize();
-    });
 
     window_builder.build().expect("Failed to build window")
 }
