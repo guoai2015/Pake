@@ -1,7 +1,6 @@
 use crate::app::config::PakeConfig;
 use std::path::PathBuf;
-use tauri::{App, Manager, Window, WindowBuilder, WindowUrl};
-use tauri::Event;
+use tauri::{App, Event, Manager, Window, WindowBuilder, WindowUrl};
 
 #[cfg(target_os = "macos")]
 use tauri::TitleBarStyle;
