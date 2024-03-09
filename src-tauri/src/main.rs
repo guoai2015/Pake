@@ -12,6 +12,8 @@ use menu::{get_menu, menu_event_handle};
 use tauri_plugin_window_state::Builder as windowStatePlugin;
 use util::{get_data_dir, get_pake_config};
 use window::get_window;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 
 pub fn run_app() {
     let (pake_config, tauri_config) = get_pake_config();
@@ -39,6 +41,18 @@ pub fn run_app() {
         }
     }
 
+    // 在应用程序初始化时创建一个标记
+    let can_exit = Arc::new(AtomicBool::new(false));
+
+    // 在处理器中检查是否允许应用程序退出
+    #[tauri::command]
+    fn can_app_exit() -> bool {
+        can_exit.load(Ordering::Relaxed)
+    }
+
+    // 注册 can_app_exit 命令
+    tauri::command!(can_app_exit);
+
     tauri_app
         .plugin(windowStatePlugin::default().build())
         .plugin(tauri_plugin_oauth::init())
@@ -57,19 +71,17 @@ pub fn run_app() {
                 #[cfg(target_os = "macos")]
                 {
                     event.window().minimize().unwrap();
-                    api.prevent_close();
                 }
 
                 #[cfg(not(target_os = "macos"))]
-                {
-                    // event.window().close().unwrap();
-                    event.window().hide().unwrap();
-                    api.prevent_exit();
-                }
+                event.window().hide().unwrap();
 
+                // 设置标记，阻止应用程序退出
+                can_exit.store(false, Ordering::Relaxed);
             }
         })
         .run(tauri::generate_context!())
+        .invoke_handler(tauri::generate_handler![can_app_exit])
         .expect("error while running tauri application");
 }
 
