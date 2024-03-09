@@ -9,6 +9,7 @@ mod util;
 use app::{invoke, menu, window};
 use invoke::{download_file, download_file_by_binary};
 use menu::{get_menu, menu_event_handle};
+use tauri::{command};
 use tauri_plugin_window_state::Builder as windowStatePlugin;
 use util::{get_data_dir, get_pake_config};
 use window::get_window;
@@ -45,20 +46,21 @@ pub fn run_app() {
     let can_exit = Arc::new(AtomicBool::new(false));
 
     // 在处理器中检查是否允许应用程序退出
-    #[tauri::command]
+    #[command]
     fn can_app_exit() -> bool {
         can_exit.load(Ordering::Relaxed)
     }
 
     // 注册 can_app_exit 命令
-    tauri::command!(can_app_exit);
+    command!(can_app_exit);
 
     tauri_app
         .plugin(windowStatePlugin::default().build())
         .plugin(tauri_plugin_oauth::init())
         .invoke_handler(tauri::generate_handler![
             download_file,
-            download_file_by_binary
+            download_file_by_binary,
+            can_app_exit
         ])
         .setup(|app| {
             let _window = get_window(app, pake_config, data_dir);
@@ -81,7 +83,6 @@ pub fn run_app() {
             }
         })
         .run(tauri::generate_context!())
-        .invoke_handler(tauri::generate_handler![can_app_exit])
         .expect("error while running tauri application");
 }
 
