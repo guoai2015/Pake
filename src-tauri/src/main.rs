@@ -57,13 +57,16 @@ pub fn run_app() {
                 #[cfg(target_os = "macos")]
                 {
                     event.window().minimize().unwrap();
+                    api.prevent_close();
                 }
 
                 #[cfg(not(target_os = "macos"))]
-                event.window().hide().unwrap();
-                // event.window().close().unwrap();
+                {
+                    // event.window().close().unwrap();
+                    event.window().hide().unwrap();
+                    api.prevent_exit();
+                }
 
-                api.prevent_close();
             }
         })
         .run(tauri::generate_context!())
